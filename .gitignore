@@ -1,0 +1,40 @@
+# Environment / secrets
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Vector store / generated embeddings
+chroma_db/
+**/chroma_db/
+
+# Trace databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Generated incident data (reproducible from a fixed seed, not committed)
+data/incidents/*
+!data/incidents/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.history/
+
+# Streamlit
+.streamlit/secrets.toml
