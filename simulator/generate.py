@@ -82,9 +82,15 @@ def _write_deploys(path: Path, deploys: list[DeployRecord]) -> None:
 def _build_answer_key(incident_id: str, seed: int, fault: FaultInfo) -> dict:
     key_evidence = [f"deploy:{fault.root_cause_service}:{fault.deploy_record.version}"]
     key_evidence += [f"log:{fault.root_cause_service}:{line.line_id}" for line in fault.key_log_lines]
+    # latency_ms and error_rate ramp up over several minutes, so the rolling
+    # z-score detector (tools/metrics_tool.py) reliably flags both. db_connections
+    # steps instantly to a new, near-constant value instead of ramping, which a
+    # short rolling window can't reliably distinguish from noise (see
+    # tests/test_metrics_tool.py::test_db_connections_step_change_is_a_known_blind_spot) —
+    # so it's deliberately left out of key_evidence to keep evidence-recall scoring honest.
     key_evidence += [
         f"metric:{fault.root_cause_service}.latency_ms",
-        f"metric:{fault.root_cause_service}.db_connections",
+        f"metric:{fault.root_cause_service}.error_rate",
     ]
     return {
         "incident_id": incident_id,

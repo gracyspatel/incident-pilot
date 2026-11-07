@@ -8,14 +8,14 @@ See [`ProjectDetails.md`](ProjectDetails.md) for the full design doc (architectu
 
 ## Status
 
-**Phase 1 — Repo setup + incident simulator (one fault type).** See [Build Plan](ProjectDetails.md#13-build-plan-and-milestones).
+**Phase 2 — Investigation tools.** See [Build Plan](ProjectDetails.md#13-build-plan-and-milestones).
 
-- [x] Repo scaffold, `.gitignore`, `requirements.txt`, `.env.example`
-- [x] Simulator: normal logs/metrics for a 5-service fake system + one injected fault
-      (`bad_deploy_pool_exhaustion`) + answer key
-- [x] Runbooks (`data/runbooks/`)
-- [x] Tests for the simulator
-- [ ] Phase 2: metrics anomaly detector, log search, deploy history, runbook RAG tools
+- [x] Phase 1: repo scaffold + incident simulator (one fault type: `bad_deploy_pool_exhaustion`) + runbooks
+- [x] Phase 2: `tools/evidence.py` — shared `EvidenceItem` format returned by every tool below
+- [x] Phase 2: `tools/metrics_tool.py` — rolling z-score anomaly detector (built from scratch)
+- [x] Phase 2: `tools/log_search.py` — time/service/level/keyword log search
+- [x] Phase 2: `tools/deploy_history.py` — deploy lookup + "most recent deploy before time X"
+- [x] Phase 2: `tools/runbook_rag.py` — chunk + embed (Sentence Transformers) + retrieve (ChromaDB)
 - [ ] Phase 3: agent graph (planner, analyst, validator, human-in-the-loop)
 - [ ] Phase 4: observability tracer + cost-aware routing
 - [ ] Phase 5: evaluation harness + baselines
@@ -60,11 +60,25 @@ python -m simulator.generate
 Each run is deterministic given the same seed (`SIMULATOR_SEED` in `.env`, default 42), so the output is
 reproducible without being committed to git.
 
+## Building the runbook index
+
+The runbook RAG tool needs a ChromaDB collection built from `data/runbooks/` before it can answer queries
+(first run downloads the small local embedding model, `all-MiniLM-L6-v2`, ~80MB):
+
+```bash
+python -m tools.runbook_rag
+```
+
+This writes to `chroma_db/` (gitignored — rebuild it anytime from the committed runbooks).
+
 ## Running tests
 
 ```bash
 pytest
 ```
+
+The runbook RAG tests load a real embedding model and are noticeably slower (~30-40s) than the rest of the
+suite, which runs in under a second.
 
 ## Design principles
 
